@@ -4,6 +4,11 @@ import random
 INITIAL_WIDTH = 800
 INITIAL_HEIGHT = 800
 
+DIMENSION_SIZE = 13
+SNAKE_HEAD_COLOR = arcade.color.EGYPTIAN_BLUE
+SNAKE_BODY_COLOR = arcade.color.DARK_GREEN
+SNAKE_BODY_SECONDARY_COLOR = arcade.color.DARK_GREEN
+
 class GameView(arcade.View):
     """
     Main application class.
@@ -20,14 +25,21 @@ class GameView(arcade.View):
         self.screen_width = INITIAL_WIDTH
         self.screen_height = INITIAL_HEIGHT
         self.snake = [(0, 0), (0, 1), (0, 2)]
-        self.apples = [(8, 8)]
-        self.direction = 1 # 0 = down, 1 = right, 2 = up, 3 = left
+        self.apples = [(3, 2)]
+        self.direction = 1  # 0 = down, 1 = right, 2 = up, 3 = left
         self.counter = 0
         self.score = 0
         self.game_over = False
+        self.win = False
 
     def reset(self):
-        pass
+        self.snake = [(0, 0), (0, 1), (0, 2)]
+        self.apples = [(3, 2)]
+        self.direction = 1
+        self.counter = 0
+        self.score = 0
+        self.game_over = False
+        self.win = False
 
     def on_draw(self):
         self.clear()
@@ -36,27 +48,40 @@ class GameView(arcade.View):
         arcade.draw_text("Snake Game", self.screen_width / 2, self.screen_height - 60, arcade.color.WHITE, font_size=30, anchor_x="center", font_name="Arial")
         arcade.draw_text("Score: " + str(self.score), self.screen_width / 2, self.screen_height - 100, arcade.color.WHITE, font_size=30, anchor_x="center", font_name="Arial")
         arcade.draw_lbwh_rectangle_outline(self.screen_width / 2 - 250, self.screen_height / 2 - 250, 500, 500, arcade.color.BLACK, 3)
-        #15x15
-        for y in range(15):
-            for x in range(15):
+        #14x14
+        for y in range(DIMENSION_SIZE):
+            for x in range(DIMENSION_SIZE):
                 if((y % 2 == 0 and x % 2 == 0) or (y % 2 == 1 and x % 2 == 1)):
-                    arcade.draw_lbwh_rectangle_filled(self.screen_width / 2 - 250 + x * (500 / 15), self.screen_height / 2 - 250 + y * (500 / 15), 500 / 15, 500 / 15, arcade.color.BITTER_LEMON)
+                    arcade.draw_lbwh_rectangle_filled(self.screen_width / 2 - 250 + x * (500 / DIMENSION_SIZE), self.screen_height / 2 - 250 + y * (500 / DIMENSION_SIZE), 500 / DIMENSION_SIZE, 500 / DIMENSION_SIZE, arcade.color.BITTER_LEMON)
                 else:
-                    arcade.draw_lbwh_rectangle_filled(self.screen_width / 2 - 250 + x * (500 / 15), self.screen_height / 2 - 250 + y * (500 / 15), 500 / 15, 500 / 15, arcade.color.BRIGHT_GREEN)
+                    arcade.draw_lbwh_rectangle_filled(self.screen_width / 2 - 250 + x * (500 / DIMENSION_SIZE), self.screen_height / 2 - 250 + y * (500 / DIMENSION_SIZE), 500 / DIMENSION_SIZE, 500 / DIMENSION_SIZE, arcade.color.BRIGHT_GREEN)
+
+        # make link between snake body
+        for i in range(1, len(self.snake)):
+            body_previous = self.snake[i - 1]
+            body_current = self.snake[i]
+            arcade.draw_line(self.screen_width / 2 - 250 + (body_previous[0] + 0.5) * (500 / DIMENSION_SIZE),
+                self.screen_width / 2 - 250 + (body_previous[1] + 0.5) * (500 / DIMENSION_SIZE),
+                self.screen_width / 2 - 250 + (body_current[0] + 0.5) * (500 / DIMENSION_SIZE),
+                self.screen_width / 2 - 250 + (body_current[1] + 0.5) * (500 / DIMENSION_SIZE),
+                SNAKE_BODY_SECONDARY_COLOR, 15)
 
         for i in range(len(self.snake)):
             if(i == 0):
-                arcade.draw_circle_filled(self.screen_width / 2 - 250 + (self.snake[i][0] + 0.5) * (500 / 15), self.screen_height / 2 - 250 + (self.snake[i][1] + 0.5) * (500 / 15), 500 / 15 / 3, arcade.color.BLACK)
+                arcade.draw_circle_filled(self.screen_width / 2 - 250 + (self.snake[i][0] + 0.5) * (500 / DIMENSION_SIZE), self.screen_height / 2 - 250 + (self.snake[i][1] + 0.5) * (500 / DIMENSION_SIZE), 500 / DIMENSION_SIZE / 3, SNAKE_HEAD_COLOR)
             else:
-                arcade.draw_circle_filled(self.screen_width / 2 - 250 + (self.snake[i][0] + 0.5) * (500 / 15), self.screen_height / 2 - 250 + (self.snake[i][1] + 0.5) * (500 / 15), 500 / 15 / 3, arcade.color.WHITE)
+                arcade.draw_circle_filled(self.screen_width / 2 - 250 + (self.snake[i][0] + 0.5) * (500 / DIMENSION_SIZE), self.screen_height / 2 - 250 + (self.snake[i][1] + 0.5) * (500 / DIMENSION_SIZE), 500 / DIMENSION_SIZE / 3, SNAKE_BODY_COLOR)
+
+
 
         for i in range(len(self.apples)):
-            arcade.draw_circle_filled(self.screen_width / 2 - 250 + (self.apples[i][0] + 0.5) * (500 / 15), self.screen_height / 2 - 250 + (self.apples[i][1] + 0.5) * (500 / 15), 500 / 15 / 3, arcade.color.RED)
+            arcade.draw_circle_filled(self.screen_width / 2 - 250 + (self.apples[i][0] + 0.5) * (500 / DIMENSION_SIZE), self.screen_height / 2 - 250 + (self.apples[i][1] + 0.5) * (500 / DIMENSION_SIZE), 500 / DIMENSION_SIZE / 3, arcade.color.RED)
 
         if (self.game_over):
             arcade.draw_lbwh_rectangle_filled(0, 0, self.screen_width, self.screen_height, (0, 0, 0, 180))
-            arcade.draw_text("Game Over", self.screen_width / 2, self.screen_height / 2, arcade.color.WHITE, font_size=30, anchor_x="center", font_name="Arial")
+            arcade.draw_text(self.win and "You Win!" or "Game Over", self.screen_width / 2, self.screen_height / 2, arcade.color.WHITE, font_size=30, anchor_x="center", font_name="Arial")
             arcade.draw_text("Score: " + str(self.score), self.screen_width / 2, self.screen_height / 2 - 50, arcade.color.WHITE, font_size=30, anchor_x="center", font_name="Arial")
+            arcade.draw_text("Press SPACE to restart", self.screen_width / 2, self.screen_height / 2 - 100, arcade.color.WHITE, font_size=30, anchor_x="center", font_name="Arial")
 
     def on_update(self, delta_time):
         if (self.game_over):
@@ -71,7 +96,18 @@ class GameView(arcade.View):
             self.apples.remove(self.snake[0])
             self.snake.append((self.snake[-1][0], self.snake[-1][1]))
             self.score += 1
-            self.apples.append((random.randint(0, 14), random.randint(0, 14)))
+            # make sure apple doesn't spawn on snake
+            # self.apples.append((random.randint(0, DIMENSION_SIZE - 1), random.randint(0, DIMENSION_SIZE - 1)))
+            possible_apple_positions = []
+            for i in range(DIMENSION_SIZE):
+                for j in range(DIMENSION_SIZE):
+                    if ((i, j) not in self.snake):
+                        possible_apple_positions.append((i, j))
+            if(len(possible_apple_positions) == 0):
+                self.game_over = True
+                self.win = True
+            else:
+                self.apples.append(random.choice(possible_apple_positions))
 
 
     def move_snake(self):
@@ -86,7 +122,7 @@ class GameView(arcade.View):
             self.snake.insert(0, (self.snake[0][0] - 1, self.snake[0][1]))
 
         # check if snake is out of bounds
-        if (self.snake[0][0] < 0 or self.snake[0][0] > 14 or self.snake[0][1] < 0 or self.snake[0][1] > 14):
+        if (self.snake[0][0] < 0 or self.snake[0][0] > DIMENSION_SIZE-1 or self.snake[0][1] < 0 or self.snake[0][1] > DIMENSION_SIZE-1):
             self.game_over = True
 
         # check if snake hits itself
@@ -95,6 +131,11 @@ class GameView(arcade.View):
                 self.game_over = True
 
     def on_key_press(self, key, key_modifiers):
+        if self.game_over:
+            if key == arcade.key.SPACE:
+                self.reset()
+
+            return
         if key == arcade.key.UP:
             if self.direction != 0 and self.direction != 2:
                 self.direction = 0
@@ -133,17 +174,10 @@ class GameView(arcade.View):
 
         pass
 
-    def on_resize(self, width, height):
-        """ This method is automatically called when the window is resized. """
-        super().on_resize(width, height)
-        self.screen_width = width
-        self.screen_height = height
-
 
 
 def main():
-    window = arcade.Window(INITIAL_WIDTH, INITIAL_HEIGHT, "Snake Game", resizable=True) # starting coordinates = (0, 0)
-
+    window = arcade.Window(INITIAL_WIDTH, INITIAL_HEIGHT, "Snake Game")
     game = GameView()
     window.show_view(game)
     window.set_location(10, 40)
@@ -151,5 +185,4 @@ def main():
 
 
 
-if __name__ == "__main__":
-    main()
+main()
